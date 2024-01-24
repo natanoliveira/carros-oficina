@@ -2,6 +2,10 @@
 const DataTypes = require('sequelize');
 const sequelize = require('../sequelize');
 
+const Pessoa = require('../models/pessoaModel');
+
+// console.log(Pessoa);
+
 const CarrosPessoas = sequelize.define('carros_pessoas', {
     pessoa_id: {
         type: DataTypes.INTEGER,
@@ -14,6 +18,10 @@ const CarrosPessoas = sequelize.define('carros_pessoas', {
     nome: {
         type: DataTypes.STRING,
         allowNull: false,
+    },
+    placa: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     descricao: {
         type: DataTypes.STRING,
@@ -43,6 +51,8 @@ const CarrosPessoas = sequelize.define('carros_pessoas', {
     // Desativa a criação automática de createdAt e updatedAt
     timestamps: false,
 });
+
+CarrosPessoas.belongsTo(Pessoa, { foreignKey: 'pessoa_id', as: 'pessoa' });
 
 // export default Pessoa;
 module.exports = CarrosPessoas

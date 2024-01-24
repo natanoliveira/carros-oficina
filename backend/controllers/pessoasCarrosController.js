@@ -2,23 +2,29 @@
 const modelo = require('../models/pessoasCarrosModel');
 const utils = require('../utils');
 
+// Importo para poder pegar o nome de outra tabela pela chave estrangeira
+const modeloPessoa = require('../models/pessoaModel');
+
 const moduloBase = "carros_pessoas";
 
 // Controlador para criar uma pessoa
 exports.create = async (req, res) => {
 
-    let { nome, sobrenome, situacao } = req.body;
+    let { nome, placa, descricao, situacao, pessoa_id } = req.body;
     // const token = uuid.uuidv4();
     const token = utils.generateUUID();
 
     try {
 
-        nome = nome.toUpperCase();
-        sobrenome = sobrenome.toUpperCase();
+        nome = nome.trim().toUpperCase();
+        descricao = descricao ? descricao.trim().toUpperCase() : null;
+        placa = placa ? placa.trim().toUpperCase() : null;
 
         const novaPessoa = await modelo.create({
+            pessoa_id,
             nome,
-            sobrenome,
+            placa,
+            descricao,
             situacao,
             token
         });
@@ -32,8 +38,15 @@ exports.create = async (req, res) => {
 };
 
 exports.list = async (req, res) => {
+
     try {
-        const pessoas = await modelo.findAll();
+        const pessoas = await modelo.findAll({
+            include: [{
+                model: modeloPessoa,
+                as: 'pessoa',
+                attributes: ['nome', 'sobrenome'], // Atributos que você deseja incluir no resultado
+            }],
+        });
 
         res.status(200).json(pessoas);
     } catch (error) {
@@ -66,7 +79,7 @@ exports.listOne = async (req, res) => {
 exports.edit = async (req, res) => {
 
     const { id } = req.params;
-    let { nome, sobrenome, situacao } = req.body;
+    let { nome, placa, descricao, situacao } = req.body;
 
     try {
         const pessoa = await modelo.findByPk(id);
@@ -76,12 +89,14 @@ exports.edit = async (req, res) => {
         }
 
         nome = nome.toUpperCase();
-        sobrenome = sobrenome.toUpperCase();
+        descricao = descricao ?? descricao.toUpperCase();
+        placa = placa ?? placa.toUpperCase();
 
         // Atualiza os dados da pessoa
         await pessoa.update({
             nome,
-            sobrenome,
+            placa,
+            descricao,
             situacao
         });
 
@@ -119,11 +134,14 @@ exports.listForFather = async (req, res) => {
 
     const pessoa_id = req.params.pessoaId;
 
-    console.log(pessoa_id);
-
     try {
         const dados = await modelo.findAll({
             where: { pessoa_id },
+            include: [{
+                model: modeloPessoa,
+                as: 'pessoa',
+                attributes: ['nome', 'sobrenome'], // Atributos que você deseja incluir no resultado
+            }],
         });
 
         if (!dados) {
